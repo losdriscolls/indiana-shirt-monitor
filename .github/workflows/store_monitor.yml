@@ -1,0 +1,37 @@
+name: Store Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  monitor_store:
+    runs-on: ubuntu-latest
+    env:
+      NTFY_STORE_TOPIC: ${{ secrets.NTFY_STORE_TOPIC }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Restore store monitor cache
+        uses: actions/cache@v3
+        with:
+          path: .store_monitor_cache.json
+          key: store-monitor-cache
+          restore-keys: |
+            store-monitor-cache
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          pip install --no-cache-dir requests beautifulsoup4
+      - name: Run store monitor script
+        run: python store_monitor.py
+      - name: Save store monitor cache
+        uses: actions/cache@v3
+        with:
+          path: .store_monitor_cache.json
+          key: store-monitor-cache-${{ github.run_id }}
+          restore-keys: |
+            store-monitor-cache
